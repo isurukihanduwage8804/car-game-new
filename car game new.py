@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Square Racer: Math Challenge", page_icon="🏎️", layout="centered")
 
 st.title("🏎️ Square Racer: Math Challenge")
-st.write("විරුද්ධ දෙසින් එන වාහනයෙන් බේරෙන්න! (enemy.png පින්තූරය පාවිච්චි වේ)")
+st.write("එකම අංකය උපරිම 3 වතාවක් පමණක් පාරේ දිස්වේ. එය හප්පා වර්ගමූලය ලබාගන්න!")
 
 # වේගය පාලනය
 speed_val = st.slider("වේගය (Speed):", min_value=1, max_value=10, value=4)
@@ -21,7 +21,7 @@ game_js = f"""
              onerror="this.src='https://cdn-icons-png.flaticon.com/512/744/744465.png';">
     </div>
     
-    <div id="rootDisplay" style="position:absolute; top:20px; left:10px; width:90px; height:90px; background:#fff; color:#e74c3c; border-radius:50%; border:5px solid #e74c3c; display:none; align-items:center; justify-content:center; font-size:35px; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index:200;">
+    <div id="rootDisplay" style="position:absolute; top:20px; left:10px; width:90px; height:90px; background:#fff; color:#e74c3c; border-radius:50%; border:5px solid #e74c3c; display:none; align-items:center; justify-content:center; font-size:35px; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index:200; font-family: Arial;">
         <span id="rootVal"></span>
     </div>
 
@@ -45,7 +45,7 @@ game_js = f"""
     let score = 0;
     let roadPos = -100;
     let carX = 45; 
-    let spawnCount = 0;
+    let currentSpawnCount = 0; // වර්තමාන අංකය කී පාරක් ආවද කියන එක
 
     const squares = [];
     for(let i=1; i<=100; i++) {{ squares.push(i*i); }}
@@ -75,7 +75,6 @@ game_js = f"""
     }}
     animateRoad();
 
-    // --- ENEMY CAR (enemy.png පාවිච්චි කර ඇත) ---
     function spawnEnemy() {{
         const enemy = document.createElement('div');
         enemy.style.position = 'absolute';
@@ -83,22 +82,16 @@ game_js = f"""
         enemy.style.left = (Math.random() * 60 + 20) + '%';
         enemy.style.width = '70px';
         enemy.style.zIndex = '90';
-        
-        // අලුත් නම මෙතන තියෙනවා
         const imgUrl = "https://raw.githubusercontent.com/isurukihanduwage8804/car-game-new/main/enemy.png";
-        
         enemy.innerHTML = `<img src="${{imgUrl}}" style="width:100%; transform: rotate(180deg);" 
                             onerror="this.src='https://cdn-icons-png.flaticon.com/512/744/744465.png'; this.style.filter='hue-rotate(300deg)';">`;
         container.appendChild(enemy);
-
         let ePos = -150;
         const eInt = setInterval(() => {{
             ePos += gameSpeed + 1.5;
             enemy.style.top = ePos + 'px';
-
             const carRect = car.getBoundingClientRect();
             const eRect = enemy.getBoundingClientRect();
-
             if (eRect.top < carRect.bottom && eRect.bottom > carRect.top &&
                 eRect.left < carRect.right && eRect.right > carRect.left) {{
                 playSound(150, 'sawtooth');
@@ -107,13 +100,14 @@ game_js = f"""
                 enemy.remove();
                 clearInterval(eInt);
             }}
-
             if (ePos > 600) {{ enemy.remove(); clearInterval(eInt); }}
         }}, 30);
     }}
 
     function spawnNumber() {{
         if (squareIndex >= squares.length) squareIndex = 0;
+        
+        // අලුත් ඉලක්කම තීරණය කිරීම
         const currentTarget = squares[squareIndex];
         nextNumBoard.innerText = currentTarget;
 
@@ -125,10 +119,9 @@ game_js = f"""
         el.style.color = '#000';
         el.style.fontSize = (currentTarget > 1000 ? '35px' : '45px');
         el.style.fontWeight = '900';
-        el.style.fontFamily = 'Arial Black';
         container.appendChild(el);
 
-        spawnCount++;
+        currentSpawnCount++; // පාරට අංකය ආපු වාර ගණන
 
         let topPos = -60;
         const moveInt = setInterval(() => {{
@@ -138,24 +131,30 @@ game_js = f"""
             const carRect = car.getBoundingClientRect();
             const numRect = el.getBoundingClientRect();
 
+            // හප්පපු අවස්ථාව
             if (numRect.top < carRect.bottom && numRect.bottom > carRect.top &&
                 numRect.left < carRect.right && numRect.right > carRect.left) {{
                 playSound(1100, 'sine');
                 score += 10;
                 scoreBoard.innerText = score;
-                const val = Math.sqrt(parseInt(el.innerText));
-                rootText.innerText = val; 
+                rootText.innerText = Math.sqrt(parseInt(el.innerText)); 
                 rootDisplay.style.display = 'flex'; 
                 el.remove();
                 clearInterval(moveInt);
-                squareIndex++;
-                spawnCount = 0;
+                squareIndex++; // ඊළඟ අංකයට යනවා
+                currentSpawnCount = 0; // Count එක Reset කරනවා
             }}
 
+            // පාරෙන් ඉවත් වූ අවස්ථාව
             if (topPos > 600) {{
                 el.remove();
                 clearInterval(moveInt);
-                if(spawnCount >= 3) {{ squareIndex++; spawnCount = 0; }}
+                
+                // වාර 3 පිරුණා නම් ඊළඟ අංකයට මාරු වෙනවා
+                if (currentSpawnCount >= 3) {{
+                    squareIndex++;
+                    currentSpawnCount = 0;
+                }}
             }}
         }}, 30);
     }}
