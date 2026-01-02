@@ -12,16 +12,16 @@ speed_val = st.slider("වේගය (Speed):", min_value=1, max_value=10, value=
 
 # --- GAME ENGINE ---
 game_js = f"""
-<div id="gameContainer" style="width:100%; height:550px; background:#f4d03f; position:relative; overflow:hidden; border:5px solid #b7950b; border-radius: 15px; outline: none;" tabindex="0">
+<div id="gameContainer" style="width:100%; height:550px; background:#f4d03f; position:relative; overflow:hidden; border:10px solid #2ecc71; border-radius: 15px; outline: none;" tabindex="0">
     <div id="roadLines" style="position:absolute; left:50%; width:2px; height:200%; top:-100%; border-left: 5px dashed rgba(0,0,0,0.3);"></div>
     
-    <div id="car" style="position:absolute; bottom:30px; left:45%; width:70px; z-index:100;">
+    <div id="car" style="position:absolute; bottom:30px; left:45%; width:70px; z-index:100; transition: left 0.1s ease-out;">
         <img src="https://raw.githubusercontent.com/isurukihanduwage8804/car-game-new/main/car.png" 
              style="width:100%; filter: drop-shadow(0px 10px 5px rgba(0,0,0,0.4));"
              onerror="this.src='https://cdn-icons-png.flaticon.com/512/744/744465.png';">
     </div>
     
-    <div id="ui" style="position:absolute; top:15px; left:15px; color:#fff; font-family:sans-serif; font-size:20px; z-index:200; background:rgba(0,0,0,0.7); padding:10px; border-radius:10px; border:2px solid #fff; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
+    <div id="ui" style="position:absolute; top:15px; left:25px; color:#fff; font-family:sans-serif; font-size:20px; z-index:200; background:rgba(0,0,0,0.7); padding:10px; border-radius:10px; border:2px solid #fff;">
         SCORE: <span id="score">0</span><br>
         TARGET: <span id="nextNum">1</span>
     </div>
@@ -82,4 +82,47 @@ game_js = f"""
         el.innerText = currentTarget;
         el.style.position = 'absolute';
         el.style.top = '-60px';
-        el.style.left = (Math.random() * 70 + 15) +
+        el.style.left = (Math.random() * 70 + 15) + '%';
+        
+        el.style.color = '#000000'; 
+        el.style.fontSize = '45px'; 
+        el.style.fontWeight = '900'; 
+        el.style.fontFamily = 'Arial Black, sans-serif';
+        el.style.textShadow = '1px 1px 0px rgba(255,255,255,0.5)';
+        
+        container.appendChild(el);
+
+        let topPos = -60;
+        const moveInt = setInterval(() => {{
+            topPos += gameSpeed;
+            el.style.top = topPos + 'px';
+
+            const carRect = car.getBoundingClientRect();
+            const numRect = el.getBoundingClientRect();
+
+            if (numRect.top < carRect.bottom && numRect.bottom > carRect.top &&
+                numRect.left < carRect.right && numRect.right > carRect.left) {{
+                
+                if (el.innerText == nextNumBoard.innerText) {{
+                    playBeep();
+                    score += 10;
+                    scoreBoard.innerText = score;
+                    el.remove();
+                    clearInterval(moveInt);
+                    squareIndex++;
+                }}
+            }}
+
+            if (topPos > 600) {{
+                el.remove();
+                clearInterval(moveInt);
+            }}
+        }}, 30);
+    }}
+
+    setInterval(spawnNumber, 2800 / (gameSpeed/2 + 1));
+    container.focus();
+</script>
+"""
+
+components.html(game_js, height=600)
