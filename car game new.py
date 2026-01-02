@@ -5,14 +5,14 @@ import streamlit.components.v1 as components
 st.set_page_config(page_title="Square Racer Game", page_icon="🏎️", layout="centered")
 
 st.title("🏎️ Square Racer: Math Challenge")
-st.write("කහ පාට පාරේ තියෙන කළු පාට ඉලක්කම් උඩින් කාර් එක පදවන්න!")
+st.write("වර්ග සංඛ්‍යාව හප්පන්න, එවිට එහි වර්ගමූලය පාරේ වම් පස දිස්වනු ඇත!")
 
 # වේගය පාලනය
 speed_val = st.slider("වේගය (Speed):", min_value=1, max_value=10, value=4)
 
 # --- GAME ENGINE ---
 game_js = f"""
-<div id="gameContainer" style="width:100%; height:550px; background:#f4d03f; position:relative; overflow:hidden; border:10px solid #2ecc71; border-radius: 15px; outline: none;" tabindex="0">
+<div id="gameContainer" style="width:100%; height:550px; background:#f4d03f; position:relative; overflow:hidden; border:15px solid #2ecc71; border-radius: 15px; outline: none;" tabindex="0">
     <div id="roadLines" style="position:absolute; left:50%; width:2px; height:200%; top:-100%; border-left: 5px dashed rgba(0,0,0,0.3);"></div>
     
     <div id="car" style="position:absolute; bottom:30px; left:45%; width:70px; z-index:100; transition: left 0.1s ease-out;">
@@ -21,20 +21,22 @@ game_js = f"""
              onerror="this.src='https://cdn-icons-png.flaticon.com/512/744/744465.png';">
     </div>
     
-    <div id="ui" style="position:absolute; top:15px; left:25px; color:#fff; font-family:sans-serif; font-size:20px; z-index:200; background:rgba(0,0,0,0.7); padding:10px; border-radius:10px; border:2px solid #fff;">
-        SCORE: <span id="score">0</span><br>
-        TARGET: <span id="nextNum">1</span>
+    <div id="rootDisplay" style="position:absolute; top:20px; left:10px; width:90px; height:90px; background:#fff; color:#e74c3c; border-radius:50%; border:5px solid #e74c3c; display:none; align-items:center; justify-content:center; font-size:32px; font-weight:bold; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index:200; font-family: Arial;">
+        <span id="rootVal"></span>
+    </div>
+
+    <div id="targetUI" style="position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.8); color:#fff; padding:10px 20px; border-radius:10px; border:2px solid #fff; font-family:sans-serif; font-size:18px; z-index:200;">
+        TARGET: <span id="nextNum" style="color:#0f0; font-weight:bold;">1</span>
     </div>
 </div>
 
 <script>
     const container = document.getElementById('gameContainer');
     const car = document.getElementById('car');
-    const scoreBoard = document.getElementById('score');
     const nextNumBoard = document.getElementById('nextNum');
-    const roadLines = document.getElementById('roadLines');
+    const rootDisplay = document.getElementById('rootDisplay');
+    const rootText = document.getElementById('rootVal');
     
-    let score = 0;
     let gameSpeed = {speed_val};
     let roadPos = -100;
     let carX = 45; 
@@ -55,20 +57,16 @@ game_js = f"""
         osc.stop(audioCtx.currentTime + 0.1);
     }}
 
-    // Arrow Key Controls
     document.addEventListener('keydown', (e) => {{
-        if (e.key === "ArrowLeft" && carX > 5) {{
-            carX -= 6;
-        }} else if (e.key === "ArrowRight" && carX < 85) {{
-            carX += 6;
-        }}
+        if (e.key === "ArrowLeft" && carX > 8) {{ carX -= 7; }}
+        else if (e.key === "ArrowRight" && carX < 82) {{ carX += 7; }}
         car.style.left = carX + "%";
     }});
 
     function animateRoad() {{
         roadPos += gameSpeed * 1.8;
         if(roadPos > 0) roadPos = -100;
-        roadLines.style.top = roadPos + "%";
+        document.getElementById('roadLines').style.top = roadPos + "%";
         requestAnimationFrame(animateRoad);
     }}
     animateRoad();
@@ -82,14 +80,11 @@ game_js = f"""
         el.innerText = currentTarget;
         el.style.position = 'absolute';
         el.style.top = '-60px';
-        el.style.left = (Math.random() * 70 + 15) + '%';
-        
-        el.style.color = '#000000'; 
-        el.style.fontSize = '45px'; 
-        el.style.fontWeight = '900'; 
-        el.style.fontFamily = 'Arial Black, sans-serif';
-        el.style.textShadow = '1px 1px 0px rgba(255,255,255,0.5)';
-        
+        el.style.left = (Math.random() * 60 + 20) + '%';
+        el.style.color = '#000';
+        el.style.fontSize = '45px';
+        el.style.fontWeight = '900';
+        el.style.fontFamily = 'Arial Black';
         container.appendChild(el);
 
         let topPos = -60;
@@ -105,18 +100,18 @@ game_js = f"""
                 
                 if (el.innerText == nextNumBoard.innerText) {{
                     playBeep();
-                    score += 10;
-                    scoreBoard.innerText = score;
+                    
+                    // වර්ගමූලය පාරේ වම් පැත්තේ රවුම ඇතුළේ පෙන්වීම
+                    const val = Math.sqrt(parseInt(el.innerText));
+                    rootText.innerText = "√" + val;
+                    rootDisplay.style.display = 'flex'; 
+                    
                     el.remove();
                     clearInterval(moveInt);
                     squareIndex++;
                 }}
             }}
-
-            if (topPos > 600) {{
-                el.remove();
-                clearInterval(moveInt);
-            }}
+            if (topPos > 600) {{ el.remove(); clearInterval(moveInt); }}
         }}, 30);
     }}
 
