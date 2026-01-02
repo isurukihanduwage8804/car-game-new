@@ -2,10 +2,10 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # පේජ් එකේ සැකසුම්
-st.set_page_config(page_title="Square Racer Game", page_icon="🏎️", layout="centered")
+st.set_page_config(page_title="Square Racer: 10,000 Challenge", page_icon="🏎️", layout="centered")
 
-st.title("🏎️ Square Racer: Math Challenge")
-st.write("වර්ග සංඛ්‍යාව හප්පන්න, එහි වර්ගමූලය (Square Root) රවුම තුළ දිස්වනු ඇත!")
+st.title("🏎️ Square Racer: 10,000 Challenge")
+st.write("1 සිට 10,000 දක්වා වර්ග සංඛ්‍යා පිළිවෙළින් හප්පා වර්ගමූලය ඉගෙන ගන්න!")
 
 # වේගය පාලනය
 speed_val = st.slider("වේගය (Speed):", min_value=1, max_value=10, value=4)
@@ -41,8 +41,11 @@ game_js = f"""
     let roadPos = -100;
     let carX = 45; 
 
+    // 1 සිට 100 දක්වා වර්ග සංඛ්‍යා පිළිවෙළින් (10,000 දක්වා)
     const squares = [];
-    for(let i=1; i<=25; i++) {{ squares.push(i*i); }}
+    for(let i=1; i<=100; i++) {{ 
+        squares.push(i*i); 
+    }}
     let squareIndex = 0;
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -72,7 +75,10 @@ game_js = f"""
     animateRoad();
 
     function spawnNumber() {{
-        if (squareIndex >= squares.length) squareIndex = 0;
+        if (squareIndex >= squares.length) {{
+            alert("සුභ පැතුම්! ඔබ 10,000 දක්වා චැලෙන්ජ් එක අවසන් කළා!");
+            squareIndex = 0;
+        }}
         const currentTarget = squares[squareIndex];
         nextNumBoard.innerText = currentTarget;
 
@@ -82,7 +88,7 @@ game_js = f"""
         el.style.top = '-60px';
         el.style.left = (Math.random() * 60 + 20) + '%';
         el.style.color = '#000';
-        el.style.fontSize = '45px';
+        el.style.fontSize = (currentTarget > 1000 ? '35px' : '45px'); // ලොකු අංක වල සයිස් එක පොඩ්ඩක් අඩු කළා පාරට ගැලපෙන්න
         el.style.fontWeight = '900';
         el.style.fontFamily = 'Arial Black';
         container.appendChild(el);
@@ -100,12 +106,9 @@ game_js = f"""
                 
                 if (el.innerText == nextNumBoard.innerText) {{
                     playBeep();
-                    
-                    // වර්ගමූලය (ඉලක්කම පමණක්) රවුම ඇතුළේ පෙන්වීම
                     const val = Math.sqrt(parseInt(el.innerText));
                     rootText.innerText = val; 
                     rootDisplay.style.display = 'flex'; 
-                    
                     el.remove();
                     clearInterval(moveInt);
                     squareIndex++;
@@ -115,7 +118,8 @@ game_js = f"""
         }}, 30);
     }}
 
-    setInterval(spawnNumber, 2800 / (gameSpeed/2 + 1));
+    // අංක ජනනය වන වේගය සකස් කිරීම
+    setInterval(spawnNumber, 3000 / (gameSpeed/2 + 1));
     container.focus();
 </script>
 """
